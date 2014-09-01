@@ -1,7 +1,7 @@
 // This test written in mocha+should.js
 var should = require('./init.js');
 
-var db, Book, Chapter, Author, Reader;
+var db, tmp, Book, Chapter, Author, Reader;
 var Category, Job;
 var Picture, PictureLink;
 var Person, Address;
@@ -1504,9 +1504,10 @@ describe('relations', function () {
     var Other;
     
     before(function () {
+      tmp = getSchema('transient');
       db = getSchema();
       Person = db.define('Person', {name: String});
-      Passport = db.define('Passport', 
+      Passport = tmp.define('Passport',
         {name:{type:'string', required: true}}, 
         {idInjection: false}
       );
@@ -1652,9 +1653,10 @@ describe('relations', function () {
     var address1, address2;
     
     before(function (done) {
+      tmp = getSchema('transient', {defaultIdType: Number});
       db = getSchema();
       Person = db.define('Person', {name: String});
-      Address = db.define('Address', {street: String});
+      Address = tmp.define('Address', {street: String});
       Address.validatesPresenceOf('street');
 
       db.automigrate(function () {
@@ -1831,9 +1833,10 @@ describe('relations', function () {
   
   describe('embedsMany - explicit ids', function () {
     before(function (done) {
+      tmp = getSchema('transient');
       db = getSchema();
       Person = db.define('Person', {name: String});
-      Address = db.define('Address', {id: { type: String, id: true }, street: String});
+      Address = tmp.define('Address', {street: String});
       Address.validatesPresenceOf('street');
 
       db.automigrate(function () {
@@ -1842,13 +1845,13 @@ describe('relations', function () {
     });
 
     it('can be declared', function (done) {
-      Person.embedsMany(Address, { options: { autoId: false } });
+      Person.embedsMany(Address);
       db.automigrate(done);
     });
     
     it('should create embedded items on scope', function(done) {
       Person.create({ name: 'Fred' }, function(err, p) {
-        p.addressList.create({ id: 'home', street: 'Street 1' }, function(err, addresses) {
+        p.addressList.create({ id: 'home', street: 'Street 1' }, function(err, address) {
           should.not.exist(err);
           p.addressList.create({ id: 'work', street: 'Work Street 2' }, function(err, address) {
             should.not.exist(err);
@@ -1983,6 +1986,17 @@ describe('relations', function () {
         should.not.exist(err);
         p.addresses.should.have.length(0);
         done();
+      });
+    });
+    
+    it('should create embedded items with auto-generated id', function(done) {
+      Person.create({ name: 'Wilma' }, function(err, p) {
+        p.addressList.create({ street: 'Home Street 1' }, function(err, address) {
+          should.not.exist(err);
+          address.id.should.match(/^[0-9a-fA-F]{24}$/);
+          address.street.should.equal('Home Street 1');
+          done();
+        });
       });
     });
     
@@ -2429,7 +2443,7 @@ describe('relations', function () {
           err.name.should.equal('ValidationError');
           err.details.codes.jobs.should.eql(['uniqueness']);
           var expected = 'The `Category` instance is not valid. ';
-          expected += 'Details: `jobs` Contains duplicate `Job` instance.';
+          expected += 'Details: `jobs` contains duplicate `Job` instance.';
           err.message.should.equal(expected);
           done();
         });
