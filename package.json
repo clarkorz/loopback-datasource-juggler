@@ -1,6 +1,6 @@
 {
   "name": "loopback-datasource-juggler",
-  "version": "2.29.2",
+  "version": "2.29.3-0.0.1",
   "description": "LoopBack DataSoure Juggler",
   "keywords": [
     "StrongLoop",
@@ -13,7 +13,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/strongloop/loopback-datasource-juggler"
+    "url": "https://github.com/clarkorz/loopback-datasource-juggler"
   },
   "main": "index.js",
   "browser": {
